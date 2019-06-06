@@ -1,162 +1,163 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
-/* eslint prefer-arrow-callback: "off" */
-import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
-import chai from 'chai';
+/* eslint-env jest */
 import Queue from './Queue.js';
 
-chai.should();
-chai.use(sinonChai);
+jest.useFakeTimers();
 
-describe('Test Queue', function () {
-  beforeEach(function () {
-    this.clock = sinon.useFakeTimers();
-    this.queue = new Queue({
+describe('Test Queue', () => {
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
+  });
+
+  afterEach(() => {
+    jest.clearAllTimers();
+  });
+
+  beforeEach(() => {
+    testContext.queue = new Queue({
       onError: (error) => {
         throw error;
       },
     });
   });
 
-  afterEach(function () {
-    this.clock.restore();
-  });
-
-  describe('Given the queue is empty', function () {
-    it('should recognize that it is empty', function () {
-      this.queue.isEmpty().should.be.true;
+  describe('Given the queue is empty', () => {
+    test('should recognize that it is empty', () => {
+      expect(testContext.queue.isEmpty()).toBe(true);
     });
   });
 
-  describe('Given the queue contains one item', function () {
-    beforeEach(function () {
-      this.action = sinon.spy();
-      this.queue.pause();
-      this.queue.push({
-        action: this.action,
+  describe('Given the queue contains one item', () => {
+    beforeEach(() => {
+      testContext.action = jest.fn();
+      testContext.queue.pause();
+      testContext.queue.push({
+        action: testContext.action,
         isSync: true,
       });
     });
-    describe('unless resume is called', function () {
-      it('should recognize that it is not empty', function () {
-        this.queue.isEmpty().should.be.false;
+    describe('unless resume is called', () => {
+      test('should recognize that it is not empty', () => {
+        expect(testContext.queue.isEmpty()).toBe(false);
       });
     });
-    describe('after queue.resume()', function () {
-      beforeEach(function () {
-        this.queue.resume();
-        this.clock.tick();
+    describe('after queue.resume()', () => {
+      beforeEach(() => {
+        testContext.queue.resume();
+        jest.advanceTimersByTime(0);
       });
-      it('should call execute action', function () {
-        this.action.should.be.called;
+      test('should call execute action', () => {
+        expect(testContext.action).toHaveBeenCalled();
       });
-      it('should become empty', function () {
-        this.queue.isEmpty().should.be.true;
+      test('should become empty', () => {
+        expect(testContext.queue.isEmpty()).toBe(true);
       });
     });
   });
 
-  describe('Given the queue contains one asynchronous', function () {
-    beforeEach(function () {
-      this.spy = sinon.spy();
-      this.params = {};
-      this.action = (params, cb) => {
+  describe('Given the queue contains one asynchronous', () => {
+    beforeEach(() => {
+      testContext.spy = jest.fn();
+      testContext.params = {};
+      testContext.action = (params, cb) => {
         setTimeout(() => {
-          this.spy(params);
+          testContext.spy(params);
           cb();
         }, 100);
       };
-      this.queue.pause();
-      this.queue.push({
-        params: [this.params],
-        action: this.action,
+      testContext.queue.pause();
+      testContext.queue.push({
+        params: [testContext.params],
+        action: testContext.action,
       });
     });
-    describe('immediately after queue.resume()', function () {
-      beforeEach(function () {
-        this.queue.resume();
-        this.clock.tick();
+    describe('immediately after queue.resume()', () => {
+      beforeEach(() => {
+        testContext.queue.resume();
+        jest.advanceTimersByTime(0);
       });
-      it('should not execute action yet', function () {
-        this.spy.should.not.be.called;
+      test('should not execute action yet', () => {
+        expect(testContext.spy).not.toHaveBeenCalled();
       });
-      it('should be empty', function () {
-        this.queue.isEmpty().should.be.true;
+      test('should be empty', () => {
+        expect(testContext.queue.isEmpty()).toBe(true);
       });
     });
-    describe('some time after queue.resume()', function () {
-      beforeEach(function () {
-        this.queue.resume();
-        this.clock.tick(100);
+    describe('some time after queue.resume()', () => {
+      beforeEach(() => {
+        testContext.queue.resume();
+        jest.advanceTimersByTime(100);
       });
-      it('should execute action', function () {
-        this.spy.should.be.calledWith(this.params);
+      test('should execute action', () => {
+        expect(testContext.spy).toHaveBeenCalledWith(testContext.params);
       });
-      it('should be empty', function () {
-        this.queue.isEmpty().should.be.true;
+      test('should be empty', () => {
+        expect(testContext.queue.isEmpty()).toBe(true);
       });
     });
   });
 
-  describe('Given the queue contains three items', function () {
-    beforeEach(function () {
-      this.spy1 = sinon.spy();
-      this.spy2 = sinon.spy();
-      this.spy3 = sinon.spy();
-      this.action1 = () => this.spy1();
-      this.action2 = (cb) => {
-        this.spy2();
+  describe('Given the queue contains three items', () => {
+    beforeEach(() => {
+      testContext.spy1 = jest.fn();
+      testContext.spy2 = jest.fn();
+      testContext.spy3 = jest.fn();
+      testContext.action1 = (cb) => {
+        testContext.spy1();
+        setTimeout(cb, 1);
+      };
+      testContext.action2 = (cb) => {
+        testContext.spy2();
         setTimeout(cb, 100);
       };
-      this.action3 = () => this.spy3();
-      this.queue.pause();
-      this.queue.push({
-        action: this.action1,
+      testContext.action3 = () => testContext.spy3();
+      testContext.queue.pause();
+      testContext.queue.push({
+        action: testContext.action1,
+      });
+      testContext.queue.push({
+        action: testContext.action2,
+      });
+      testContext.queue.push({
+        action: testContext.action3,
         isSync: true,
       });
-      this.queue.push({
-        action: this.action2,
+    });
+    describe('immediately after queue.resume()', () => {
+      beforeEach(() => {
+        testContext.queue.resume();
+        jest.advanceTimersByTime(0);
       });
-      this.queue.push({
-        action: this.action3,
-        isSync: true,
+      test('should start executing the first item', () => {
+        expect(testContext.spy1).toHaveBeenCalled();
+      });
+      test('should not yet execute the second item', () => {
+        expect(testContext.spy2).not.toHaveBeenCalled();
       });
     });
-    describe('immediately after queue.resume()', function () {
-      beforeEach(function () {
-        this.queue.resume();
-        this.clock.tick();
+    describe('shortly after queue.resume()', () => {
+      beforeEach(() => {
+        testContext.queue.resume();
+        jest.advanceTimersByTime(1);
       });
-      it('should start executing the first item', function () {
-        this.spy1.should.be.called;
+      test('should start executing the second item', () => {
+        expect(testContext.spy2).toHaveBeenCalled();
       });
-      it('should not yet execute the second item', function () {
-        this.spy2.should.not.be.called;
-      });
-    });
-    describe('shortly after queue.resume()', function () {
-      beforeEach(function () {
-        this.queue.resume();
-        this.clock.tick(1);
-      });
-      it('should start executing the second item', function () {
-        this.spy2.should.be.called;
-      });
-      it('should not yet execute the third item', function () {
-        this.spy3.should.not.be.called;
+      test('should not yet execute the third item', () => {
+        expect(testContext.spy3).not.toHaveBeenCalled();
       });
     });
-    describe('some time after queue.resume()', function () {
-      beforeEach(function () {
-        this.queue.resume();
-        this.clock.tick(102);
+    describe('some time after queue.resume()', () => {
+      beforeEach(() => {
+        testContext.queue.resume();
+        jest.advanceTimersByTime(102);
       });
-      it('should execute the third item', function () {
-        this.spy3.should.be.called;
+      test('should execute the third item', () => {
+        expect(testContext.spy3).toHaveBeenCalled();
       });
-      it('should become empty', function () {
-        this.queue.isEmpty().should.be.true;
+      test('should become empty', () => {
+        expect(testContext.queue.isEmpty()).toBe(true);
       });
     });
   });

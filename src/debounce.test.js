@@ -1,165 +1,167 @@
-/* eslint-env mocha */
-/* eslint prefer-arrow-callback: "off" */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 
-import sinon from 'sinon';
 import { debounce, debounceKey } from './debounce.js';
 
-describe('Test Debounce', function () {
-  beforeEach(function () {
-    this.clock = sinon.useFakeTimers();
-    this.spy1 = sinon.spy();
-    this.spy2 = sinon.spy();
-    this.debounce = debounce(this.spy1, { ms: 100 });
-    this.debounceKey = debounceKey(this.spy2, { ms: 200 });
+jest.useFakeTimers();
+
+describe('Test Debounce', () => {
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
   });
 
-  afterEach(function () {
-    this.clock.restore();
+  afterEach(() => {
+    jest.clearAllTimers();
   });
 
-  describe('Given I call a debounced function three times', function () {
-    beforeEach(function () {
-      this.debounce('1', '2');
-      this.debounce('3', '4');
-      this.debounce('5', '6');
-    });
-
-    describe('and I check results immediately', function () {
-      it('should not call the function yet', function () {
-        this.spy1.should.not.be.called;
-      });
-    });
-
-    describe('and I wait 100 ms', function () {
-      beforeEach(function () {
-        this.clock.tick(100);
-      });
-      it('should call function exactly once', function () {
-        this.spy1.should.be.calledOnce;
-      });
-      it('should ignore the first call', function () {
-        this.spy1.should.not.be.calledWith('1', '2');
-      });
-      it('should ignore the second call', function () {
-        this.spy1.should.not.be.calledWith('3', '4');
-      });
-      it('should call function with proper arguments', function () {
-        this.spy1.should.be.calledWith('5', '6');
-      });
-    });
+  beforeEach(() => {
+    testContext.spy1 = jest.fn();
+    testContext.spy2 = jest.fn();
+    testContext.debounce = debounce(testContext.spy1, { ms: 100 });
+    testContext.debounceKey = debounceKey(testContext.spy2, { ms: 200 });
   });
 
-  describe('Given I call a (key) debounced function four times with two different keys', function () {
-    beforeEach(function () {
-      this.debounceKey('A', '1', '2');
-      this.debounceKey('A', '3', '4');
-      this.debounceKey('A', '5', '6');
-      this.debounceKey('B', '7', '8');
+  describe('Given I call a debounced function three times', () => {
+    beforeEach(() => {
+      testContext.debounce('1', '2');
+      testContext.debounce('3', '4');
+      testContext.debounce('5', '6');
     });
 
-    describe('and I check results immediately', function () {
-      it('should not call the function yet', function () {
-        this.spy2.should.not.be.called;
+    describe('and I check results immediately', () => {
+      test('should not call the function yet', () => {
+        expect(testContext.spy1).not.toHaveBeenCalled();
       });
     });
 
-    describe('and I wait 200 ms', function () {
-      beforeEach(function () {
-        this.clock.tick(200);
+    describe('and I wait 100 ms', () => {
+      beforeEach(() => {
+        jest.advanceTimersByTime(100);
       });
-      it('should call function exactly two times', function () {
-        this.spy2.should.be.calledTwice;
+      test('should call function exactly once', () => {
+        expect(testContext.spy1).toHaveBeenCalledTimes(1);
       });
-      it('should ignore the first call', function () {
-        this.spy2.should.not.be.calledWith('A', '1', '2');
+      test('should ignore the first call', () => {
+        expect(testContext.spy1).not.toHaveBeenCalledWith('1', '2');
       });
-      it('should ignore the second call', function () {
-        this.spy2.should.not.be.calledWith('A', '3', '4');
+      test('should ignore the second call', () => {
+        expect(testContext.spy1).not.toHaveBeenCalledWith('3', '4');
       });
-      it('should call function with proper arguments', function () {
-        this.spy2.should.be.calledWith('A', '5', '6');
-      });
-      it('should call function with proper arguments', function () {
-        this.spy2.should.be.calledWith('B', '7', '8');
+      test('should call function with proper arguments', () => {
+        expect(testContext.spy1).toHaveBeenCalledWith('5', '6');
       });
     });
   });
 
-  describe('Given I call a debounced function four times with small delay', function () {
-    beforeEach(function () {
-      this.debounce('1', '2');
-      this.clock.tick(40);
-      this.debounce('3', '4');
-      this.clock.tick(40);
-      this.debounce('5', '6');
-      this.clock.tick(40);
-      this.debounce('7', '8');
+  describe('Given I call a (key) debounced function four times with two different keys', () => {
+    beforeEach(() => {
+      testContext.debounceKey('A', '1', '2');
+      testContext.debounceKey('A', '3', '4');
+      testContext.debounceKey('A', '5', '6');
+      testContext.debounceKey('B', '7', '8');
     });
 
-    describe('and I check results immediately', function () {
-      it('should not call the function yet', function () {
-        this.spy1.should.not.be.called;
+    describe('and I check results immediately', () => {
+      test('should not call the function yet', () => {
+        expect(testContext.spy2).not.toHaveBeenCalled();
       });
     });
 
-    describe('and I check results after another 100 ms', function () {
-      beforeEach(function () {
-        this.clock.tick(100);
+    describe('and I wait 200 ms', () => {
+      beforeEach(() => {
+        jest.advanceTimersByTime(200);
       });
-
-      it('should call function, but only once', function () {
-        this.spy1.should.be.calledOnce;
+      test('should call function exactly two times', () => {
+        expect(testContext.spy2).toHaveBeenCalledTimes(2);
+      });
+      test('should ignore the first call', () => {
+        expect(testContext.spy2).not.toHaveBeenCalledWith('A', '1', '2');
+      });
+      test('should ignore the second call', () => {
+        expect(testContext.spy2).not.toHaveBeenCalledWith('A', '3', '4');
+      });
+      test('should call function with proper arguments', () => {
+        expect(testContext.spy2).toHaveBeenCalledWith('A', '5', '6');
+      });
+      test('should call function with proper arguments', () => {
+        expect(testContext.spy2).toHaveBeenCalledWith('B', '7', '8');
       });
     });
   });
 
-  describe('Given I have a recursive function which I want to debounce', function () {
-    beforeEach(function () {
-      this.spy3 = sinon.spy();
-      this.recursive = debounce((count) => {
+  describe('Given I call a debounced function four times with small delay', () => {
+    beforeEach(() => {
+      testContext.debounce('1', '2');
+      jest.advanceTimersByTime(40);
+      testContext.debounce('3', '4');
+      jest.advanceTimersByTime(40);
+      testContext.debounce('5', '6');
+      jest.advanceTimersByTime(40);
+      testContext.debounce('7', '8');
+    });
+
+    describe('and I check results immediately', () => {
+      test('should not call the function yet', () => {
+        expect(testContext.spy1).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('and I check results after another 100 ms', () => {
+      beforeEach(() => {
+        jest.advanceTimersByTime(100);
+      });
+
+      test('should call function, but only once', () => {
+        expect(testContext.spy1).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+
+  describe('Given I have a recursive function which I want to debounce', () => {
+    beforeEach(() => {
+      testContext.spy3 = jest.fn();
+      testContext.recursive = debounce((count) => {
         if (count > 0) {
-          this.recursive(count - 1);
+          testContext.recursive(count - 1);
         }
-        this.spy3(count);
+        testContext.spy3(count);
       }, { ms: 10 });
-      //----------------
-      this.recursive(2);
+      //-----------------------
+      testContext.recursive(2);
     });
 
-    describe('and I check immediately', function () {
-      it('should not call the function yet', function () {
-        this.spy3.should.not.be.called;
-      });
-    });
-
-    describe('and I check after another 10 ms', function () {
-      beforeEach(function () {
-        this.clock.tick(10);
-      });
-
-      it('should call function once', function () {
-        this.spy3.should.be.calledOnce;
-      });
-      it('should call function with proper arguments', function () {
-        this.spy3.should.be.calledWith(2);
+    describe('and I check immediately', () => {
+      test('should not call the function yet', () => {
+        expect(testContext.spy3).not.toHaveBeenCalled();
       });
     });
 
-    describe('and I check after another 30 ms', function () {
-      beforeEach(function () {
-        this.clock.tick(30);
+    describe('and I check after another 10 ms', () => {
+      beforeEach(() => {
+        jest.advanceTimersByTime(10);
       });
 
-      it('should call function exactly 3 times', function () {
-        this.spy3.should.be.calledThrice;
+      test('should call function once', () => {
+        expect(testContext.spy3).toHaveBeenCalledTimes(1);
       });
-      it('should call function with proper arguments', function () {
-        this.spy3.should.be.calledWith(2);
-        this.spy3.should.be.calledWith(1);
-        this.spy3.should.be.calledWith(0);
+      test('should call function with proper arguments', () => {
+        expect(testContext.spy3).toHaveBeenCalledWith(2);
+      });
+    });
+
+    describe('and I check after another 30 ms', () => {
+      beforeEach(() => {
+        jest.advanceTimersByTime(30);
+      });
+      test('should call function exactly 3 times', () => {
+        expect(testContext.spy3).toHaveBeenCalledTimes(3);
+      });
+      test('should call function with proper arguments', () => {
+        expect(testContext.spy3).toHaveBeenNthCalledWith(1, 2);
+        expect(testContext.spy3).toHaveBeenNthCalledWith(2, 1);
+        expect(testContext.spy3).toHaveBeenNthCalledWith(3, 0);
       });
     });
   });
 });
-

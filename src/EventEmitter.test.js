@@ -1,117 +1,114 @@
-/* eslint-env mocha */
-/* eslint prefer-arrow-callback: "off" */
-/* eslint no-unused-expressions: "off" */
-
-import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
-import chai from 'chai';
+/* eslint-env jest */
 import EventEmitter from './EventEmitter.js';
 
-chai.should();
-chai.use(sinonChai);
+describe('Test EventEmitter', () => {
+  let testContext;
 
-describe('Test EventEmitter', function () {
-  beforeEach(function () {
-    this.emitter = new EventEmitter();
+  beforeEach(() => {
+    testContext = {};
   });
 
-  describe('Given a single listener is registered', function () {
-    beforeEach(function () {
-      this.spy1 = sinon.spy();
-      this.stop = this.emitter.on('EVENT', this.spy1);
-    });
-
-    it('should be triggered when event is emitted', function () {
-      const object = {};
-      this.emitter.emit('EVENT', object);
-      this.spy1.should.have.been.calledWith(object);
-    });
-
-    it('should not be triggered if other event is emitted', function () {
-      const object = {};
-      this.emitter.emit('__EVENT', object);
-      this.spy1.should.have.not.been.called;
-    });
-
-    it('should be triggered multiple times', function () {
-      const object = {};
-      this.emitter.emit('EVENT', object);
-      this.emitter.emit('EVENT', object);
-      this.spy1.should.have.been.calledTwice;
-    });
-
-    it('should not be triggered if stopped on time', function () {
-      this.stop();
-      this.emitter.emit('EVENT');
-      this.spy1.should.not.have.been.called;
-    });
+  beforeEach(() => {
+    testContext.emitter = new EventEmitter();
   });
 
-  describe('Given a single once-time listener is registered', function () {
-    beforeEach(function () {
-      this.spy1 = sinon.spy();
-      this.stop = this.emitter.once('EVENT', this.spy1);
+  describe('Given a single listener is registered', () => {
+    beforeEach(() => {
+      testContext.spy1 = jest.fn();
+      testContext.stop = testContext.emitter.on('EVENT', testContext.spy1);
     });
 
-    it('should be triggered when event is emitted', function () {
+    test('should be triggered when event is emitted', () => {
       const object = {};
-      this.emitter.emit('EVENT', object);
-      this.spy1.should.have.been.calledWith(object);
+      testContext.emitter.emit('EVENT', object);
+      expect(testContext.spy1).toHaveBeenCalledWith(object);
     });
 
-    it('should not be triggered if other event is emitted', function () {
+    test('should not be triggered if other event is emitted', () => {
       const object = {};
-      this.emitter.emit('__EVENT', object);
-      this.spy1.should.have.not.been.called;
+      testContext.emitter.emit('__EVENT', object);
+      expect(testContext.spy1).not.toHaveBeenCalled();
     });
 
-    it('should not be triggered multiple times', function () {
+    test('should be triggered multiple times', () => {
       const object = {};
-      this.emitter.emit('EVENT', object);
-      this.emitter.emit('EVENT', object);
-      this.spy1.should.have.been.calledOnce;
+      testContext.emitter.emit('EVENT', object);
+      testContext.emitter.emit('EVENT', object);
+      expect(testContext.spy1).toHaveBeenCalledTimes(2);
     });
 
-    it('should not be triggered if stopped on time', function () {
-      this.stop();
-      this.emitter.emit('EVENT');
-      this.spy1.should.not.have.been.called;
+    test('should not be triggered if stopped on time', () => {
+      testContext.stop();
+      testContext.emitter.emit('EVENT');
+      expect(testContext.spy1).not.toHaveBeenCalled();
     });
   });
 
-  describe('Given a new listener is added in a callback', function () {
-    beforeEach(function () {
-      this.spy1 = sinon.spy();
-      this.spy2 = sinon.spy();
-      this.stop = this.emitter.once('EVENT', () => {
-        this.spy1();
-        this.emitter.once('EVENT', this.spy2);
+  describe('Given a single once-time listener is registered', () => {
+    beforeEach(() => {
+      testContext.spy1 = jest.fn();
+      testContext.stop = testContext.emitter.once('EVENT', testContext.spy1);
+    });
+
+    test('should be triggered when event is emitted', () => {
+      const object = {};
+      testContext.emitter.emit('EVENT', object);
+      expect(testContext.spy1).toHaveBeenCalledWith(object);
+    });
+
+    test('should not be triggered if other event is emitted', () => {
+      const object = {};
+      testContext.emitter.emit('__EVENT', object);
+      expect(testContext.spy1).not.toHaveBeenCalled();
+    });
+
+    test('should not be triggered multiple times', () => {
+      const object = {};
+      testContext.emitter.emit('EVENT', object);
+      testContext.emitter.emit('EVENT', object);
+      expect(testContext.spy1).toHaveBeenCalledTimes(1);
+    });
+
+    test('should not be triggered if stopped on time', () => {
+      testContext.stop();
+      testContext.emitter.emit('EVENT');
+      expect(testContext.spy1).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Given a new listener is added in a callback', () => {
+    beforeEach(() => {
+      testContext.spy1 = jest.fn();
+      testContext.spy2 = jest.fn();
+      testContext.stop = testContext.emitter.once('EVENT', () => {
+        testContext.spy1();
+        testContext.emitter.once('EVENT', testContext.spy2);
       });
     });
 
-    it('should be triggered when event is emitted', function () {
-      this.emitter.emit('EVENT');
-      this.spy1.should.have.been.calledOnce;
+    test('should be triggered when event is emitted', () => {
+      testContext.emitter.emit('EVENT');
+      expect(testContext.spy1).toHaveBeenCalledTimes(1);
     });
 
-    it('the other callback should not be triggered at first', function () {
-      this.emitter.emit('EVENT');
-      this.spy2.should.not.have.been.called;
+    test('the other callback should not be triggered at first', () => {
+      testContext.emitter.emit('EVENT');
+      expect(testContext.spy2).not.toHaveBeenCalled();
     });
 
-    it('the other callback should ne triggered after second emit', function () {
-      this.emitter.emit('EVENT');
-      this.emitter.emit('EVENT');
-      this.spy1.should.have.been.calledOnce;
-      this.spy2.should.have.been.calledOnce;
+    test('the other callback should ne triggered after second emit', () => {
+      testContext.emitter.emit('EVENT');
+      testContext.emitter.emit('EVENT');
+      expect(testContext.spy1).toHaveBeenCalledTimes(1);
+      expect(testContext.spy2).toHaveBeenCalledTimes(1);
     });
 
-    it('further calls should be idepmpotent', function () {
-      this.emitter.emit('EVENT');
-      this.emitter.emit('EVENT');
-      this.emitter.emit('EVENT');
-      this.spy1.should.have.been.calledOnce;
-      this.spy2.should.have.been.calledOnce;
+    test('further calls should be idepmpotent', () => {
+      testContext.emitter.emit('EVENT');
+      testContext.emitter.emit('EVENT');
+      testContext.emitter.emit('EVENT');
+      expect(testContext.spy1).toHaveBeenCalledTimes(1);
+      expect(testContext.spy2).toHaveBeenCalledTimes(1);
     });
   });
 });

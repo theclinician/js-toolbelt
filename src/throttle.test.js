@@ -1,176 +1,178 @@
-/* eslint-env mocha */
-/* eslint prefer-arrow-callback: "off" */
-/* eslint no-unused-expressions: "off" */
-
-import sinon from 'sinon';
+/* eslint-env jest */
 import { throttle, throttleKey } from './throttle.js';
 
-describe('Test Throttle', function () {
-  beforeEach(function () {
-    this.clock = sinon.useFakeTimers();
-    this.spy1 = sinon.spy();
-    this.spy2 = sinon.spy();
-    this.throttle = throttle(this.spy1, { ms: 100 });
-    this.throttleKey = throttleKey(this.spy2, { ms: 200 });
+jest.useFakeTimers();
+
+describe('Test Throttle', () => {
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
   });
 
-  afterEach(function () {
-    this.clock.restore();
+  afterEach(() => {
+    jest.clearAllTimers();
   });
 
-  describe('Given I call a throttled function three times', function () {
-    beforeEach(function () {
-      this.throttle('1', '2');
-      this.throttle('3', '4');
-      this.throttle('5', '6');
-    });
-
-    describe('and I check results immediately', function () {
-      it('should call function exactly once', function () {
-        this.spy1.should.be.calledOnce;
-      });
-      it('should call function with proper arguments', function () {
-        this.spy1.should.be.calledWith('1', '2');
-      });
-    });
-
-    describe('and I wait 100 ms', function () {
-      beforeEach(function () {
-        this.clock.tick(100);
-      });
-      it('should call function exactly once', function () {
-        this.spy1.should.be.calledTwice;
-      });
-      it('should ignore the middle call', function () {
-        this.spy1.should.not.be.calledWith('3', '4');
-      });
-      it('should call function with proper arguments', function () {
-        this.spy1.should.be.calledWith('5', '6');
-      });
-    });
+  beforeEach(() => {
+    testContext.spy1 = jest.fn();
+    testContext.spy2 = jest.fn();
+    testContext.throttle = throttle(testContext.spy1, { ms: 100 });
+    testContext.throttleKey = throttleKey(testContext.spy2, { ms: 200 });
   });
 
-  describe('Given I call a (key) throttled function four times with two different keys', function () {
-    beforeEach(function () {
-      this.throttleKey('A', '1', '2');
-      this.throttleKey('A', '3', '4');
-      this.throttleKey('A', '5', '6');
-      this.throttleKey('B', '7', '8');
+  describe('Given I call a throttled function three times', () => {
+    beforeEach(() => {
+      testContext.throttle('1', '2');
+      testContext.throttle('3', '4');
+      testContext.throttle('5', '6');
     });
 
-    describe('and I check results immediately', function () {
-      it('should call function twice', function () {
-        this.spy2.should.be.calledTwice;
+    describe('and I check results immediately', () => {
+      test('should call function exactly once', () => {
+        expect(testContext.spy1).toHaveBeenCalledTimes(1);
       });
-      it('should call function with proper arguments', function () {
-        this.spy2.should.be.calledWith('A', '1', '2');
-        this.spy2.should.be.calledWith('B', '7', '8');
+      test('should call function with proper arguments', () => {
+        expect(testContext.spy1).toHaveBeenCalledWith('1', '2');
       });
     });
 
-    describe('and I wait 200 ms', function () {
-      beforeEach(function () {
-        this.clock.tick(200);
+    describe('and I wait 100 ms', () => {
+      beforeEach(() => {
+        jest.advanceTimersByTime(100);
       });
-      it('should call function exactly three times', function () {
-        this.spy2.should.be.calledThrice;
+      test('should call function exactly once', () => {
+        expect(testContext.spy1).toHaveBeenCalledTimes(2);
       });
-      it('should ignore the middle call', function () {
-        this.spy2.should.not.be.calledWith('A', '3', '4');
+      test('should ignore the middle call', () => {
+        expect(testContext.spy1).not.toHaveBeenCalledWith('3', '4');
       });
-      it('should call function with proper arguments', function () {
-        this.spy2.should.be.calledWith('A', '5', '6');
+      test('should call function with proper arguments', () => {
+        expect(testContext.spy1).toHaveBeenCalledWith('5', '6');
       });
     });
   });
 
-  describe('Given I call a throttled function four times with small delay', function () {
-    beforeEach(function () {
-      this.throttle('1', '2');
-      this.clock.tick(40);
-      this.throttle('3', '4');
-      this.clock.tick(40);
-      this.throttle('5', '6');
-      this.clock.tick(40);
-      this.throttle('7', '8');
+  describe('Given I call a (key) throttled function four times with two different keys', () => {
+    beforeEach(() => {
+      testContext.throttleKey('A', '1', '2');
+      testContext.throttleKey('A', '3', '4');
+      testContext.throttleKey('A', '5', '6');
+      testContext.throttleKey('B', '7', '8');
     });
 
-    describe('and I check results immediately', function () {
-      it('should call function exactly once', function () {
-        this.spy1.should.be.calledTwice;
+    describe('and I check results immediately', () => {
+      test('should call function twice', () => {
+        expect(testContext.spy2).toHaveBeenCalledTimes(2);
       });
-      it('should call function with proper arguments', function () {
-        this.spy1.should.be.calledWith('1', '2');
-        this.spy1.should.be.calledWith('5', '6');
+      test('should call function with proper arguments', () => {
+        expect(testContext.spy2).toHaveBeenCalledWith('A', '1', '2');
+        expect(testContext.spy2).toHaveBeenCalledWith('B', '7', '8');
       });
     });
 
-    describe('and I check results after another 80 ms', function () {
-      beforeEach(function () {
-        this.clock.tick(80);
+    describe('and I wait 200 ms', () => {
+      beforeEach(() => {
+        jest.advanceTimersByTime(200);
       });
-
-      it('should call function exactly 3 times', function () {
-        this.spy1.should.be.calledThrice;
+      test('should call function exactly three times', () => {
+        expect(testContext.spy2).toHaveBeenCalledTimes(3);
       });
-      it('should call function with proper arguments', function () {
-        this.spy1.should.be.calledWith('1', '2');
-        this.spy1.should.be.calledWith('5', '6');
-        this.spy1.should.be.calledWith('7', '8');
+      test('should ignore the middle call', () => {
+        expect(testContext.spy2).not.toHaveBeenCalledWith('A', '3', '4');
+      });
+      test('should call function with proper arguments', () => {
+        expect(testContext.spy2).toHaveBeenCalledWith('A', '5', '6');
       });
     });
   });
 
-  describe('Given I have a recursive function which I want to throttle', function () {
-    beforeEach(function () {
-      this.spy3 = sinon.spy();
-      this.recursive = throttle((count) => {
+  describe('Given I call a throttled function four times with small delay', () => {
+    beforeEach(() => {
+      testContext.throttle('1', '2');
+      jest.advanceTimersByTime(40);
+      testContext.throttle('3', '4');
+      jest.advanceTimersByTime(40);
+      testContext.throttle('5', '6');
+      jest.advanceTimersByTime(40);
+      testContext.throttle('7', '8');
+    });
+
+    describe('and I check results immediately', () => {
+      test('should call function exactly once', () => {
+        expect(testContext.spy1).toHaveBeenCalledTimes(2);
+      });
+      test('should call function with proper arguments', () => {
+        expect(testContext.spy1).toHaveBeenCalledWith('1', '2');
+        expect(testContext.spy1).toHaveBeenCalledWith('5', '6');
+      });
+    });
+
+    describe('and I check results after another 80 ms', () => {
+      beforeEach(() => {
+        jest.advanceTimersByTime(80);
+      });
+
+      test('should call function exactly 3 times', () => {
+        expect(testContext.spy1).toHaveBeenCalledTimes(3);
+      });
+      test('should call function with proper arguments', () => {
+        expect(testContext.spy1).toHaveBeenCalledWith('1', '2');
+        expect(testContext.spy1).toHaveBeenCalledWith('5', '6');
+        expect(testContext.spy1).toHaveBeenCalledWith('7', '8');
+      });
+    });
+  });
+
+  describe('Given I have a recursive function which I want to throttle', () => {
+    beforeEach(() => {
+      testContext.spy3 = jest.fn();
+      testContext.recursive = throttle((count) => {
         if (count > 0) {
-          this.recursive(count - 1);
+          testContext.recursive(count - 1);
         }
-        this.spy3(count);
+        testContext.spy3(count);
       }, { ms: 10 });
       //----------------
-      this.recursive(2);
+      testContext.recursive(2);
     });
 
-    describe('and I check immediately', function () {
-      it('should be called exactly once', function () {
-        this.spy3.should.be.calledOnce;
+    describe('and I check immediately', () => {
+      test('should be called exactly once', () => {
+        expect(testContext.spy3).toHaveBeenCalledTimes(1);
       });
-      it('should call function with proper arguments', function () {
-        this.spy3.should.be.calledWith(2);
-      });
-    });
-
-    describe('and I check after another 10 ms', function () {
-      beforeEach(function () {
-        this.clock.tick(10);
-      });
-
-      it('should call function exactly twice', function () {
-        this.spy3.should.be.calledTwice;
-      });
-      it('should call function with proper arguments', function () {
-        this.spy3.should.be.calledWith(2);
-        this.spy3.should.be.calledWith(1);
+      test('should call function with proper arguments', () => {
+        expect(testContext.spy3).toHaveBeenCalledWith(2);
       });
     });
 
-    describe('and I check after another 30 ms', function () {
-      beforeEach(function () {
-        this.clock.tick(30);
+    describe('and I check after another 10 ms', () => {
+      beforeEach(() => {
+        jest.advanceTimersByTime(10);
       });
 
-      it('should call function exactly 3 times', function () {
-        this.spy3.should.be.calledThrice;
+      test('should call function exactly twice', () => {
+        expect(testContext.spy3).toHaveBeenCalledTimes(2);
       });
-      it('should call function with proper arguments', function () {
-        this.spy3.should.be.calledWith(2);
-        this.spy3.should.be.calledWith(1);
-        this.spy3.should.be.calledWith(0);
+      test('should call function with proper arguments', () => {
+        expect(testContext.spy3).toHaveBeenCalledWith(2);
+        expect(testContext.spy3).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('and I check after another 30 ms', () => {
+      beforeEach(() => {
+        jest.advanceTimersByTime(30);
+      });
+
+      test('should call function exactly 3 times', () => {
+        expect(testContext.spy3).toHaveBeenCalledTimes(3);
+      });
+      test('should call function with proper arguments', () => {
+        expect(testContext.spy3).toHaveBeenCalledWith(2);
+        expect(testContext.spy3).toHaveBeenCalledWith(1);
+        expect(testContext.spy3).toHaveBeenCalledWith(0);
       });
     });
   });
 });
-
